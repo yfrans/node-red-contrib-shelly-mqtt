@@ -1,0 +1,99 @@
+<script type="text/javascript">
+    RED.nodes.registerType('shelly mqtt device', {
+        category: 'shelly',
+        color: '#90abf5',
+        defaults: {
+            name: { value: '' },
+            shellyDevice: { value: '', type: 'shelly-mqtt-config', required: true },
+            action: { value: '' },
+            position: {
+                value: '',
+                validate: function (v) {
+                    return this.action !== 'position' || !isNaN(v);
+                }
+            }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'font-awesome/fa-bolt',
+        label: function() {
+            if (this.name && this.name.indexOf('*') !== this.name.length - 1) {
+                return this.name;
+            }
+
+            let defaultName = 'Shelly MQTT';
+            let configNode = RED.nodes.node(this.shellyDevice);
+            if (configNode) {
+                defaultName = configNode.name;
+            }
+
+            let n = this.name || defaultName;
+            n = n.replace(/\*$/, '');
+
+            if (this.action.length > 0) {
+                n += ` | ${this.action}`;
+                if (this.action === 'position') {
+                    n += ` (${this.position})`;
+                }
+            }
+
+            return n;
+        },
+        oneditprepare: function () {
+            let options = [];
+            let configNode = RED.nodes.node(this.shellyDevice);
+            if (!configNode) {
+                options = ['on', 'off', 'open', 'close', 'stop', 'position'];
+            } else {
+                if (configNode.deviceType === '100') {
+                    options = ['open', 'close', 'stop', 'position'];
+                } else {
+                    options = ['on', 'off'];
+                }
+            }
+
+            options.forEach(o => {
+                let opt = $('<option>', { value: o, text: o, selected: this.action === o });
+                $('#node-input-action').append(opt);
+            });
+
+            $('#node-input-action').change(function () {
+                togglePositionVisibility();
+            });
+            togglePositionVisibility();
+        }
+    });
+
+    function togglePositionVisibility() {
+        if ($('#node-input-action').val() === 'position') {
+            $('.position').show();
+        } else {
+            $('.position').hide();
+        }
+    }
+</script>
+
+<script type="text/html" data-template-name="shelly mqtt device">
+    <div class="form-row">
+        <label for="node-input-shellyDevice"><i class="fa fa-cog"></i> Shelly device</label>
+        <input id="node-input-shellyDevice">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-pencil"></i> Name</label>
+        <input type="text" id="node-input-name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-action"><i class="fa fa-pencil"></i> Action</label>
+        <select id="node-input-action">
+            <option value="">---</option>
+        </select>
+    </div>
+    <div class="form-row position">
+        <label for="node-input-position"><i class="fa fa-pencil"></i> Position</label>
+        <input type="text" id="node-input-position">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="shelly mqtt device">
+    <p>Shelly MQTT protocol helper for Node-Red.</p>
+</script>

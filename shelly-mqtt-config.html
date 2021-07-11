@@ -1,0 +1,37 @@
+<script type="text/javascript">
+    RED.nodes.registerType('shelly-mqtt-config',{
+        category: 'config',
+        defaults: {
+            name: { value: '' },
+            mqttBroker: { value: '', type: 'mqtt-broker', required: true },
+            deviceName: { value: '', required: true },
+            deviceType: { value: '', required: true }
+        },
+        label: function() {
+            return this.name || this.deviceName;
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="shelly-mqtt-config">
+    <div class="form-row">
+        <label for="node-config-input-mqttBroker"><i class="fa fa-cog"></i> MQTT broker</label>
+        <input id="node-config-input-mqttBroker">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="fa fa-pencil"></i> Name</label>
+        <input type="text" id="node-config-input-name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-deviceName"><i class="fa fa-pencil"></i> Device name</label>
+        <input type="text" id="node-config-input-deviceName">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-deviceType"><i class="fa fa-columns"></i> Relay / Roller</label>
+        <select id="node-config-input-deviceType">
+            <option value="0">Relay 0</option>
+            <option value="1">Relay 1</option>
+            <option value="100">Roller</option>
+        </select>
+    </div>
+</script>

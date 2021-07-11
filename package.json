@@ -1,0 +1,26 @@
+{
+    "name": "node-red-contrib-shelly-mqtt",
+    "version": "1.0.0",
+    "description": "Shelly MQTT protocol helper for Node-Red.",
+    "node-red": {
+        "nodes": {
+            "shelly-mqtt-device": "shelly-mqtt-device.js",
+            "shelly-mqtt-config": "shelly-mqtt-config.js"
+        }
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/yfrans/node-red-contrib-shelly-mqtt.git"
+    },
+    "keywords": [
+        "node-red",
+        "shelly",
+        "mqtt"
+    ],
+    "author": "Yossi Frances",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/yfrans/node-red-contrib-shelly-mqtt/issues"
+    },
+    "homepage": "https://github.com/yfrans/node-red-contrib-shelly-mqtt#readme"
+}
