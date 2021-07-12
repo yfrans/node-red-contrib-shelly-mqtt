@@ -8,7 +8,7 @@ For example, if your device is using the topic: ```shellies/shellyswitch25-abcde
 
 ### Usage
 The Shelly-Device node accepts one input and emit one output. The input is used to control the device through message object:
-- msg.action = ```on``` of ```off``` for relay, ```open```, ```close``` or ```stop``` for roller devices
+- msg.action = ```on``` or ```off``` for relay, ```open```, ```close``` or ```stop``` for roller devices
 - msg.position = position in percentage for roller devices
 
 The output will emit the current status of the relay for relay devices or the current status and position of the roller for roller devices. It is also emits the current power of the relay, but mosly for inner testing. Use it if you want :)
