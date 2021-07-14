@@ -48,6 +48,11 @@ module.exports = function (RED) {
 
                 if (this.deviceType === '100') {
                     this.mqttConf.client.publish(`shellies/${this.deviceName}/roller/0/command`, msg.action);
+                    if (msg.action !== 'stop' && msg.optime > 0) {
+                        setTimeout(() => {
+                            this.mqttConf.client.publish(`shellies/${this.deviceName}/roller/0/command`, 'stop');
+                        }, msg.optime);
+                    }
                 } else {
                     this.mqttConf.client.publish(`shellies/${this.deviceName}/relay/${this.deviceType}/command`, msg.action);
                 }

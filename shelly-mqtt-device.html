@@ -11,7 +11,14 @@
                 validate: function (v) {
                     return this.action !== 'position' || !isNaN(v);
                 }
-            }
+            },
+            optime: {
+                value: '',
+                validate: function (v) {
+                    return v.length === 0 || !isNaN(v);
+                }
+            },
+            emitStop: { value: false }
         },
         inputs: 1,
         outputs: 1,
@@ -33,42 +40,78 @@
             if (this.action.length > 0) {
                 n += ` | ${this.action}`;
                 if (this.action === 'position') {
-                    n += ` (${this.position})`;
+                    n += ` (${this.position}%)`;
+                } else if (this.optime) {
+                    n += ` (${this.optime}ms)`;
+                }
+                if (['open', 'close'].includes(this.action) && this.emitStop) {
+                    n += ` ES`;
                 }
             }
 
             return n;
         },
         oneditprepare: function () {
-            let options = [];
-            let configNode = RED.nodes.node(this.shellyDevice);
-            if (!configNode) {
-                options = ['on', 'off', 'open', 'close', 'stop', 'position'];
-            } else {
-                if (configNode.deviceType === '100') {
-                    options = ['open', 'close', 'stop', 'position'];
-                } else {
-                    options = ['on', 'off'];
-                }
-            }
+            init(this.shellyDevice);
 
-            options.forEach(o => {
-                let opt = $('<option>', { value: o, text: o, selected: this.action === o });
-                $('#node-input-action').append(opt);
+            $('#node-input-shellyDevice').change(function () {
+                init($(this).val());
             });
 
             $('#node-input-action').change(function () {
                 togglePositionVisibility();
+                toggleOpTimeVisibility();
             });
-            togglePositionVisibility();
         }
     });
+
+    function init(shellyDevice) {
+        let actions = [];
+        let configNode = RED.nodes.node(shellyDevice);
+        if (!configNode) {
+            $('.action').hide();
+        } else {
+            if (configNode.deviceType === '100') {
+                actions = ['', 'open', 'close', 'stop', 'position'];
+            } else {
+                actions = ['', 'on', 'off'];
+            }
+            $('.action').show();
+        }
+
+        $('#node-input-action').empty();
+        $('#node-input-position').empty();
+
+        actions.forEach(o => {
+            let opt = $('<option>', { value: o, text: o, selected: this.action === o });
+            $('#node-input-action').append(opt);
+        });
+
+        for (var i = 0; i < 101; i++) {
+            let opt = $('<option>', { value: i, text: `${i}%`, selected: +this.position === i });
+            $('#node-input-position').append(opt);
+        }
+
+        togglePositionVisibility();
+        toggleOpTimeVisibility();
+    }
 
     function togglePositionVisibility() {
         if ($('#node-input-action').val() === 'position') {
             $('.position').show();
         } else {
             $('.position').hide();
+        }
+    }
+
+    function toggleOpTimeVisibility() {
+        let action = $('#node-input-action').val();
+        if (action === 'open' || action === 'close') {
+            $('.optime').show();
+            $('.emitStop').show();
+        } else {
+            $('.optime').hide();
+            $('.emitStop').hide();
         }
     }
 </script>
@@ -82,15 +125,21 @@
         <label for="node-input-name"><i class="fa fa-pencil"></i> Name</label>
         <input type="text" id="node-input-name">
     </div>
-    <div class="form-row">
+    <div class="form-row action">
         <label for="node-input-action"><i class="fa fa-pencil"></i> Action</label>
-        <select id="node-input-action">
-            <option value="">---</option>
-        </select>
+        <select id="node-input-action"></select>
     </div>
     <div class="form-row position">
         <label for="node-input-position"><i class="fa fa-pencil"></i> Position</label>
-        <input type="text" id="node-input-position">
+        <select id="node-input-position"></select>
+    </div>
+    <div class="form-row optime">
+        <label for="node-input-optime"><i class="fa fa-pencil"></i> Op. time (ms)</label>
+        <input type="text" id="node-input-optime">
+    </div>
+    <div class="form-row emitStop">
+        <label for="node-input-emitStop"><i class="fa fa-pencil"></i> Emit stop</label>
+        <input type="checkbox" id="node-input-emitStop">
     </div>
 </script>
 

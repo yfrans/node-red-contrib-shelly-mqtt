@@ -1,6 +1,6 @@
 {
     "name": "node-red-contrib-shelly-mqtt",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Shelly MQTT protocol helper for Node-Red.",
     "node-red": {
         "nodes": {
