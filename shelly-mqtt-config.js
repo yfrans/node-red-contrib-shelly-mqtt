@@ -85,6 +85,9 @@ module.exports = function (RED) {
     function handleConnected(node) {
         node.status({ fill: 'green', shape: 'dot', text: `connected to MQTT broker` });
 
+        node.mqttConf.client.publish(`shellies/${node.deviceName}/command`, 'announce');    // Get device information (not used right now)
+        node.mqttConf.client.publish(`shellies/${node.deviceName}/command`, 'update');   // This will force the device to report the current state
+
         if (node.deviceType === '100') {
             node.mqttConf.subscribe(`shellies/${node.deviceName}/roller/0`, { qos: 0 }, node.onMqttMessage);
             node.mqttConf.subscribe(`shellies/${node.deviceName}/roller/0/pos`, { qos: 0 }, node.onMqttMessage);
