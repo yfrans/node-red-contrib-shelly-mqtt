@@ -4,6 +4,7 @@ module.exports = function (RED) {
 
         let stopEmitted = true; // Reset this to false only on input
         this.shellyConfig = RED.nodes.getNode(config.shellyDevice);
+        this.lastState = {};
 
         this.sendNodeMessage = (payload) => {
             this.send({
@@ -17,12 +18,18 @@ module.exports = function (RED) {
         if (!emitStop) {
             this.shellyConfig.eventEmitter.on('roller-position', (position) => {
                 this.sendNodeMessage({ position: +position });
+                this.lastState.position = position;
+                updateNodeStatus(this, this.lastState);
             });
             this.shellyConfig.eventEmitter.on('relay-state', (state) => {
                 this.sendNodeMessage({ state });
+                this.lastState.relay = state;
+                updateNodeStatus(this, this.lastState);
             });
             this.shellyConfig.eventEmitter.on('relay-power', (power) => {
                 this.sendNodeMessage({ power: +power });
+                this.lastState.power = power;
+                updateNodeStatus(this, this.lastState);
             });
         }
 
@@ -37,7 +44,12 @@ module.exports = function (RED) {
             } else {
                 this.sendNodeMessage({ action });
             }
+            this.lastState.rollerAction = action;
+            updateNodeStatus(this, this.lastState);
         });
+
+        this.shellyConfig.eventEmitter.on('connected', () => updateNodeStatus(this, 'connected'));
+        this.shellyConfig.eventEmitter.on('disconnected', () => updateNodeStatus(this, 'disconnected'));
 
         this.on('input', (msg) => {
             stopEmitted = false;
@@ -56,6 +68,32 @@ module.exports = function (RED) {
                 this.shellyConfig.sendDeviceAction(msg);
             }
         });
+    }
+
+    function updateNodeStatus(node, status) {
+        if (status === 'connected') {
+            node.status({ fill: 'green', shape: 'dot', text: `connected` });
+        } else if (status === 'disconnected') {
+            node.status({ fill: 'red', shape: 'ring', text: 'disconnected' });
+        } else {
+            let statusString = null;
+            if (status.relay) {
+                statusString = `relay: ${status.relay}`;
+            } else if (status.rollerAction) {
+                statusString = `roller: ${status.rollerAction}`;
+                if (status.position) {
+                    statusString += ` | ${status.position}%`;
+                }
+            }
+
+            if (statusString && status.power) {
+                statusString += ` | ${status.power}w`;
+            }
+
+            if (statusString) {
+                node.status({ fill: 'green', shape: 'dot', text: statusString });
+            }
+        }
     }
 
     RED.nodes.registerType('shelly mqtt device', ShellyMQTTDevice);

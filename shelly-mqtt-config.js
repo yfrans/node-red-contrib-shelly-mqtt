@@ -14,7 +14,7 @@ module.exports = function (RED) {
             this.mqttConf.connect();
             this.mqttConf.client.on('connect', () => handleConnected(this));
             this.mqttConf.client.on('close', () => {
-                this.status({ fill: 'red', shape: 'ring', text: 'disconnected' });
+                this.eventEmitter.emit('disconnected');
             });
         }
 
@@ -83,7 +83,7 @@ module.exports = function (RED) {
     }
 
     function handleConnected(node) {
-        node.status({ fill: 'green', shape: 'dot', text: `connected to MQTT broker` });
+        node.eventEmitter.emit('connected');
 
         node.mqttConf.client.publish(`shellies/${node.deviceName}/command`, 'announce');    // Get device information (not used right now)
         node.mqttConf.client.publish(`shellies/${node.deviceName}/command`, 'update');   // This will force the device to report the current state
