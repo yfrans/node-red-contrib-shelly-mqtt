@@ -52,10 +52,10 @@
             return n;
         },
         oneditprepare: function () {
-            init(this.shellyDevice);
+            init(this, this.shellyDevice);
 
-            $('#node-input-shellyDevice').change(function () {
-                init($(this).val());
+            $('#node-input-shellyDevice').change(() => {
+                init(this, $('#node-input-shellyDevice').val());
             });
 
             $('#node-input-action').change(function () {
@@ -65,7 +65,7 @@
         }
     });
 
-    function init(shellyDevice) {
+    function init(ctx, shellyDevice) {
         let actions = [];
         let configNode = RED.nodes.node(shellyDevice);
         if (!configNode) {
@@ -83,12 +83,12 @@
         $('#node-input-position').empty();
 
         actions.forEach(o => {
-            let opt = $('<option>', { value: o, text: o, selected: this.action === o });
+            let opt = $('<option>', { value: o, text: o, selected: ctx.action === o });
             $('#node-input-action').append(opt);
         });
 
         for (var i = 0; i < 101; i++) {
-            let opt = $('<option>', { value: i, text: `${i}%`, selected: +this.position === i });
+            let opt = $('<option>', { value: i, text: `${i}%`, selected: +ctx.position === i });
             $('#node-input-position').append(opt);
         }
 
