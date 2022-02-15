@@ -9,6 +9,7 @@ module.exports = function (RED) {
         this.mqttConf = RED.nodes.getNode(config.mqttBroker);
         this.deviceName = config.deviceName;
         this.deviceType = config.deviceType;
+        this.lastState = {};
 
         if (this.mqttConf) {
             this.mqttConf.connect();
@@ -70,6 +71,12 @@ module.exports = function (RED) {
 
             return false;
         };
+
+        this.emitCachedState = () => {
+            Object.keys(this.lastState).forEach(topic => {
+                this.eventEmitter.emit(topic, this.lastState[topic]);
+            });
+        };
     }
 
     function handleDisconnected(node) {
@@ -85,6 +92,7 @@ module.exports = function (RED) {
     function handleConnected(node) {
         node.eventEmitter.emit('connected');
 
+        node.mqttConf.subscribe(`shellies/${node.deviceName}/announce`, { qos: 0 }, node.onMqttMessage);
         node.mqttConf.client.publish(`shellies/${node.deviceName}/command`, 'announce');    // Get device information (not used right now)
         node.mqttConf.client.publish(`shellies/${node.deviceName}/command`, 'update');   // This will force the device to report the current state
 
@@ -102,14 +110,23 @@ module.exports = function (RED) {
     }
 
     function handleMqttMessage(topic, message) {
+        let emitTopic = null;
+        let emitPayload = message.toString();
         if (endsWith(topic, '/roller/0/pos')) {
-            this.eventEmitter.emit('roller-position', message.toString());
+            emitTopic = 'roller-position';
         } else if (endsWith(topic, '/roller/0')) {
-            this.eventEmitter.emit('roller-action', message.toString());
+            emitTopic = 'roller-action';
         } else if (endsWith(topic, `/relay/${this.deviceType}`)) {
-            this.eventEmitter.emit('relay-state', message.toString());
+            emitTopic = 'relay-state';
         } else if (endsWith(topic, `/relay/${this.deviceType}/power`)) {
-            this.eventEmitter.emit('relay-power', message.toString());
+            emitTopic = 'relay-power';
+        } else if (endsWith(topic, '/announce')) {
+            emitTopic = 'announce';
+        }
+
+        if (emitTopic) {
+            this.lastState[emitTopic] = emitPayload;
+            this.eventEmitter.emit(emitTopic, emitPayload);
         }
     }
 

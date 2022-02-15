@@ -31,6 +31,24 @@ module.exports = function (RED) {
                 this.lastState.power = power;
                 updateNodeStatus(this, this.lastState);
             });
+            this.shellyConfig.eventEmitter.on('announce', (message) => {
+                try { message = JSON.parse(message); }
+                catch (ex) {
+                    console.error('error while parsing announce message', ex);
+                    message = null;
+                }
+
+                if (!message) {
+                    return;
+                }
+
+                this.sendNodeMessage({
+                    announce: Object.assign({
+                        name: this.shellyConfig.name,
+                        relay: this.shellyConfig.deviceType
+                    }, message)
+                });
+            });
         }
 
         this.shellyConfig.eventEmitter.on('roller-action', (action) => {
