@@ -1,134 +1,184 @@
-var events = require('events');
+const events = require("events");
+const announce = require("./announce");
 
 module.exports = function (RED) {
-    function ShellyMQTTConfig(config) {
-        RED.nodes.createNode(this, config);
+  function ShellyMQTTConfig(config) {
+    RED.nodes.createNode(this, config);
 
-        this.eventEmitter = new events.EventEmitter();
+    this.eventEmitter = new events.EventEmitter();
 
-        this.mqttConf = RED.nodes.getNode(config.mqttBroker);
-        this.deviceName = config.deviceName;
-        this.deviceType = config.deviceType;
-        this.lastState = {};
+    this.mqttConf = RED.nodes.getNode(config.mqttBroker);
+    this.config = config;
 
-        if (this.mqttConf) {
-            this.mqttConf.connect();
-            this.mqttConf.client.on('connect', () => handleConnected(this));
-            this.mqttConf.client.on('close', () => {
-                this.eventEmitter.emit('disconnected');
-            });
-        }
+    this.ipAddress = "";
+    this.lastState = {};
+    this.subscriptions = [];
 
-        this.on('close', (removed, done) => {
-            handleDisconnected(this);
-            done();
-        });
-
-        this.onMqttMessage = handleMqttMessage.bind(this);
-
-        this.register = function (event, cb) {
-            this.events[event] = cb;
-        };
-
-        this.sendEvent = (event, payload) => {
-            if (this.events[event]) {
-                this.events[event].call(this, payload);
-            }
-        };
-
-        this.sendDeviceAction = (msg) => {
-            if (!this.mqttConf) {
-                return false;
-            }
-
-            if (msg.action) {
-                if (!['open', 'close', 'stop', 'on', 'off'].includes(msg.action)) {
-                    this.error('got unknown command: ' + msg.action);
-                    return false;
-                }
-
-                if (this.deviceType === '100') {
-                    this.mqttConf.client.publish(`shellies/${this.deviceName}/roller/0/command`, msg.action);
-                    if (msg.action !== 'stop' && msg.optime > 0) {
-                        setTimeout(() => {
-                            this.mqttConf.client.publish(`shellies/${this.deviceName}/roller/0/command`, 'stop');
-                        }, msg.optime);
-                    }
-                } else {
-                    this.mqttConf.client.publish(`shellies/${this.deviceName}/relay/${this.deviceType}/command`, msg.action);
-                }
-                return true;
-            } else if (msg.position) {
-                let pos = +msg.position;
-                if (isNaN(pos) || pos < 0 || pos > 100) {
-                    this.error('incorrect position value');
-                    return false;
-                }
-
-                this.mqttConf.client.publish(`shellies/${this.deviceName}/roller/0/command/pos`, pos.toString());
-                return true;
-            }
-
-            return false;
-        };
-
-        this.emitCachedState = () => {
-            Object.keys(this.lastState).forEach(topic => {
-                this.eventEmitter.emit(topic, this.lastState[topic]);
-            });
-        };
+    // Connect to MQTT
+    if (this.mqttConf) {
+      this.mqttConf.connect();
+      this.mqttConf.client.on("connect", () => handleConnected(this));
+      this.mqttConf.client.on("close", () => {
+        this.eventEmitter.emit("disconnected");
+      });
     }
 
-    function handleDisconnected(node) {
-        if (node.deviceType === '100') {
-            node.mqttConf.unsubscribe(`shellies/${node.deviceName}/roller/0/pos`, node.onMqttMessage);
-            node.mqttConf.unsubscribe(`shellies/${node.deviceName}/roller/0`, node.onMqttMessage);
-        } else {
-            node.mqttConf.unsubscribe(`shellies/${node.deviceName}/relay/${node.deviceType}`, node.onMqttMessage);
-            node.mqttConf.unsubscribe(`shellies/${node.deviceName}/relay/${node.deviceType}/power`, node.onMqttMessage);
+    // Node close
+    this.on("close", (removed, done) => {
+      this.subscriptions.forEach((s) => this.mqttConf.unsubscribe(s));
+      this.subscriptions = [];
+      done();
+    });
+
+    // Emit device state (and also cache it)
+    this.emit = function (topic, payload) {
+      this.lastState[topic] = payload;
+      this.eventEmitter.emit(topic, payload);
+    };
+
+    // Handle device announcement message
+    this.handleAnnounceMessage = (announceMessage) => {
+      this.ipAddress = announceMessage.ip;
+      if (this.config.haDiscovery) {
+        publishDiscoveryMessage(this);
+      }
+    };
+
+    // Handle device action message
+    this.sendDeviceAction = (msg) => {
+      if (!this.mqttConf) {
+        return false;
+      }
+
+      if (msg.action) {
+        return handleAction(this, msg);
+      } else if (msg.position) {
+        return handlePosition(this, msg);
+      }
+
+      return false;
+    };
+
+    // Send cached state to subscribers
+    this.emitCachedState = () => {
+      Object.keys(this.lastState).forEach((topic) => {
+        this.eventEmitter.emit(topic, this.lastState[topic]);
+      });
+    };
+
+    // Subscribe to device topic
+    this.subscribe = (topic, handler, isFullTopic = false) => {
+      topic = isFullTopic ? topic : `shellies/${this.config.deviceName}/${topic}`;
+      this.mqttConf.subscribe(topic, { qos: 0 }, (topic, payload) => {
+        let res = handler(this, topic, payload.toString());
+        if (res) {
+          if (Array.isArray(res)) {
+            this.emit(res[0], res[1]);
+          } else {
+            this.emit(res, payload.toString());
+          }
         }
+      });
+      this.subscriptions.push(topic);
+    };
+  }
+
+  // Handle cover position message
+  function handlePosition(device, message) {
+    let pos = +message.position;
+    if (isNaN(pos) || pos < 0 || pos > 100) {
+      device.error("incorrect position value");
+      return false;
     }
 
-    function handleConnected(node) {
-        node.eventEmitter.emit('connected');
+    device.mqttConf.client.publish(`shellies/${device.config.deviceName}/roller/0/command/pos`, pos.toString());
+    return true;
+  }
 
-        node.mqttConf.subscribe(`shellies/${node.deviceName}/announce`, { qos: 0 }, node.onMqttMessage);
-        node.mqttConf.client.publish(`shellies/${node.deviceName}/command`, 'announce');    // Get device information (not used right now)
-        node.mqttConf.client.publish(`shellies/${node.deviceName}/command`, 'update');   // This will force the device to report the current state
-
-        if (node.deviceType === '100') {
-            node.mqttConf.subscribe(`shellies/${node.deviceName}/roller/0`, { qos: 0 }, node.onMqttMessage);
-            node.mqttConf.subscribe(`shellies/${node.deviceName}/roller/0/pos`, { qos: 0 }, node.onMqttMessage);
-        } else {
-            node.mqttConf.subscribe(`shellies/${node.deviceName}/relay/${node.deviceType}`, { qos: 0 }, node.onMqttMessage);
-            node.mqttConf.subscribe(`shellies/${node.deviceName}/relay/${node.deviceType}/power`, { qos: 0 }, node.onMqttMessage);
-        }
+  // Handle generic action message
+  function handleAction(device, message) {
+    if (!["open", "close", "stop", "on", "off"].includes(message.action)) {
+      device.error("got unknown command: " + message.action);
+      return false;
     }
 
-    function endsWith(str, needle) {
-        return str.indexOf(needle) === str.length - needle.length;
+    if (device.config.channel === "cover") {
+      const rollerTopic = `shellies/${device.config.deviceName}/roller/0/command`;
+      device.mqttConf.client.publish(rollerTopic, message.action);
+      if (message.action !== "stop" && message.optime > 0) {
+        setTimeout(() => {
+          device.mqttConf.client.publish(rollerTopic, "stop");
+        }, message.optime);
+      }
+    } else {
+      if (device.config.deviceType === "vintage") {
+        device.mqttConf.client.publish(
+          `shellies/${device.config.deviceName}/light/0/set`,
+          JSON.stringify({
+            turn: message.action,
+            brightness: message.brightness || 100
+          })
+        );
+      } else {
+        device.mqttConf.client.publish(
+          `shellies/${device.config.deviceName}/relay/${device.config.channel}/command`,
+          message.action
+        );
+      }
     }
+    return true;
+  }
 
-    function handleMqttMessage(topic, message) {
-        let emitTopic = null;
-        let emitPayload = message.toString();
-        if (endsWith(topic, '/roller/0/pos')) {
-            emitTopic = 'roller-position';
-        } else if (endsWith(topic, '/roller/0')) {
-            emitTopic = 'roller-action';
-        } else if (endsWith(topic, `/relay/${this.deviceType}`)) {
-            emitTopic = 'relay-state';
-        } else if (endsWith(topic, `/relay/${this.deviceType}/power`)) {
-            emitTopic = 'relay-power';
-        } else if (endsWith(topic, '/announce')) {
-            emitTopic = 'announce';
-        }
-
-        if (emitTopic) {
-            this.lastState[emitTopic] = emitPayload;
-            this.eventEmitter.emit(emitTopic, emitPayload);
-        }
+  // Publish discovery (announcement) message
+  function publishDiscoveryMessage(node) {
+    if (node.config.deviceType === "2.5") {
+      if (node.config.channel === "cover") {
+        announce.cover(node);
+      } else {
+        announce.relay(node);
+      }
+    } else if (node.config.deviceType === "1pm") {
+      announce.relay(node);
+    } else if (node.config.deviceType === "vintage") {
+      announce.vintage(node);
     }
+  }
 
-    RED.nodes.registerType('shelly-mqtt-config', ShellyMQTTConfig);
-}
+  // MQTT ready and connected
+  function handleConnected(node) {
+    node.eventEmitter.emit("connected");
+
+    node.subscribe(`announce`, (n, t, m) => {
+      try {
+        let json = JSON.parse(m.toString());
+        node.handleAnnounceMessage(json);
+        return ["announce", json];
+      } catch {}
+    });
+    node.subscribe("online", () => "online");
+
+    node.mqttConf.client.publish(`shellies/${node.config.deviceName}/command`, "announce"); // Get device information
+    node.mqttConf.client.publish(`shellies/${node.config.deviceName}/command`, "update"); // Force device to report the current state
+
+    if (node.config.deviceType === "2.5" || node.config.deviceType === "1pm") {
+      if (node.config.channel === "cover") {
+        node.subscribe(`roller/0`, () => "roller-action");
+        node.subscribe(`roller/0/pos`, () => "roller-position");
+        node.subscribe(`roller/0/power`, () => "roller-power");
+        node.subscribe(`roller/0/energy`, () => "roller-energy");
+      } else {
+        node.subscribe(`relay/${node.config.channel}`, () => "relay-state");
+        node.subscribe(`input_event/${node.config.channel}`, () => "event");
+        node.subscribe(`relay/${node.config.channel}/power`, () => "relay-power");
+        node.subscribe(`relay/${node.config.channel}/energy`, () => "relay-energy");
+      }
+    } else if (node.config.deviceType === "vintage") {
+      node.subscribe(`light/0/status`, () => "light-status");
+      node.subscribe(`light/0/power`, () => "light-power");
+    } else if (node.config.deviceType === "i3") {
+      node.subscribe(`input_event/${node.config.channel}`, () => "event");
+    }
+  }
+
+  RED.nodes.registerType("shelly-mqtt-config", ShellyMQTTConfig);
+};

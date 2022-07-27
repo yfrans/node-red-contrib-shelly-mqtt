@@ -1,37 +1,102 @@
 <script type="text/javascript">
-    RED.nodes.registerType('shelly-mqtt-config',{
-        category: 'config',
-        defaults: {
-            name: { value: '' },
-            mqttBroker: { value: '', type: 'mqtt-broker', required: true },
-            deviceName: { value: '', required: true },
-            deviceType: { value: '', required: true }
-        },
-        label: function() {
-            return this.name || this.deviceName;
-        }
-    });
+  RED.nodes.registerType("shelly-mqtt-config", {
+    category: "config",
+    defaults: {
+      name: { value: "" },
+      mqttBroker: { value: "", type: "mqtt-broker", required: true },
+      deviceName: { value: "", required: true },
+      deviceType: { value: "", required: true },
+      channel: { value: 0, required: true },
+      haDiscovery: { value: false, required: true }
+    },
+    label: function () {
+      return this.name || this.deviceName;
+    },
+    oneditprepare: function () {
+      initChannels(this, this.deviceType);
+
+      $("#node-config-input-deviceType").change(() => {
+        initChannels(this, $("#node-config-input-deviceType").val());
+      });
+
+      $("#node-input-action").change(function () {
+        togglePositionVisibility();
+        toggleOpTimeVisibility();
+      });
+    }
+  });
+
+  function initChannels(ctx, selectedDeviceType) {
+    $("#node-config-input-channel").empty();
+    let channelCount = 0;
+    let cover = false;
+    switch (selectedDeviceType) {
+      case "1pm":
+      case "vintage":
+        channelCount = 1;
+        break;
+      case "2.5":
+        channelCount = 2;
+        cover = true;
+        break;
+      case "i3":
+        channelCount = 3;
+        break;
+    }
+
+    for (var i = 0; i < channelCount; i++) {
+      let opt = $("<option>", {
+        value: i,
+        text: `Channel ${i + 1}`,
+        selected: +ctx.channel === i || i === 0
+      });
+      $("#node-config-input-channel").append(opt);
+    }
+
+    if (cover) {
+      let opt = $("<option>", {
+        value: "cover",
+        text: `Cover`,
+        selected: ctx.channel === "cover"
+      });
+      $("#node-config-input-channel").append(opt);
+    }
+
+    $("#node-config-input-channel").prop("disabled", cover ? channelCount === 0 : channelCount < 2);
+    if (selectedDeviceType === "i3") {
+      $("#node-config-input-haDiscovery").prop("checked", false).prop("disabled", true);
+    }
+  }
 </script>
 
 <script type="text/html" data-template-name="shelly-mqtt-config">
-    <div class="form-row">
-        <label for="node-config-input-mqttBroker"><i class="fa fa-cog"></i> MQTT broker</label>
-        <input id="node-config-input-mqttBroker">
-    </div>
-    <div class="form-row">
-        <label for="node-config-input-name"><i class="fa fa-pencil"></i> Name</label>
-        <input type="text" id="node-config-input-name">
-    </div>
-    <div class="form-row">
-        <label for="node-input-deviceName"><i class="fa fa-pencil"></i> Device name</label>
-        <input type="text" id="node-config-input-deviceName">
-    </div>
-    <div class="form-row">
-        <label for="node-config-input-deviceType"><i class="fa fa-columns"></i> Relay / Roller</label>
-        <select id="node-config-input-deviceType">
-            <option value="0">Relay 0</option>
-            <option value="1">Relay 1</option>
-            <option value="100">Roller</option>
-        </select>
-    </div>
+  <div class="form-row">
+    <label for="node-config-input-mqttBroker"><i class="fa fa-cog"></i> MQTT broker</label>
+    <input id="node-config-input-mqttBroker" />
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-name"><i class="fa fa-pencil"></i> Name</label>
+    <input type="text" id="node-config-input-name" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-deviceName"><i class="fa fa-pencil"></i> Device name</label>
+    <input type="text" id="node-config-input-deviceName" />
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-deviceType"><i class="fa fa-columns"></i> Type</label>
+    <select id="node-config-input-deviceType">
+      <option value="2.5">Shelly 2.5</option>
+      <option value="1pm">Shelly 1 / 1PM</option>
+      <option value="vintage">Vintage</option>
+      <option value="i3">i3</option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-channel"><i class="fa fa-columns"></i> Channel</label>
+    <select id="node-config-input-channel"></select>
+  </div>
+  <div class="form-row">
+    <label for="node-input-haDiscovery"><i class="fa fa-globe"></i> HA discovery</label>
+    <input type="checkbox" id="node-config-input-haDiscovery" />
+  </div>
 </script>

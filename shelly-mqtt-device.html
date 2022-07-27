@@ -1,148 +1,201 @@
 <script type="text/javascript">
-    RED.nodes.registerType('shelly mqtt device', {
-        category: 'shelly',
-        color: '#90abf5',
-        defaults: {
-            name: { value: '' },
-            shellyDevice: { value: '', type: 'shelly-mqtt-config', required: true },
-            action: { value: '' },
-            position: {
-                value: '',
-                validate: function (v) {
-                    return this.action !== 'position' || !isNaN(v);
-                }
-            },
-            optime: {
-                value: '',
-                validate: function (v) {
-                    return v.length === 0 || !isNaN(v);
-                }
-            },
-            emitStop: { value: false }
-        },
-        inputs: 1,
-        outputs: 1,
-        icon: 'font-awesome/fa-bolt',
-        label: function() {
-            if (this.name && this.name.indexOf('*') !== this.name.length - 1) {
-                return this.name;
-            }
-
-            let defaultName = 'Shelly MQTT';
-            let configNode = RED.nodes.node(this.shellyDevice);
-            if (configNode) {
-                defaultName = configNode.name;
-            }
-
-            let n = this.name || defaultName;
-            n = n.replace(/\*$/, '');
-
-            if (this.action.length > 0) {
-                n += ` | ${this.action}`;
-                if (this.action === 'position') {
-                    n += ` (${this.position}%)`;
-                } else if (this.optime) {
-                    n += ` (${this.optime}ms)`;
-                }
-                if (['open', 'close'].includes(this.action) && this.emitStop) {
-                    n += ` ES`;
-                }
-            }
-
-            return n;
-        },
-        oneditprepare: function () {
-            init(this, this.shellyDevice);
-
-            $('#node-input-shellyDevice').change(() => {
-                init(this, $('#node-input-shellyDevice').val());
-            });
-
-            $('#node-input-action').change(function () {
-                togglePositionVisibility();
-                toggleOpTimeVisibility();
-            });
+  RED.nodes.registerType("shelly mqtt device", {
+    category: "shelly",
+    color: "#90abf5",
+    defaults: {
+      name: { value: "" },
+      shellyDevice: { value: "", type: "shelly-mqtt-config", required: true },
+      action: { value: "" },
+      position: {
+        value: "",
+        validate: function (v) {
+          return this.action !== "position" || !isNaN(v);
         }
-    });
-
-    function init(ctx, shellyDevice) {
-        let actions = [];
-        let configNode = RED.nodes.node(shellyDevice);
-        if (!configNode) {
-            $('.action').hide();
-        } else {
-            if (configNode.deviceType === '100') {
-                actions = ['', 'open', 'close', 'stop', 'position'];
-            } else {
-                actions = ['', 'on', 'off'];
-            }
-            $('.action').show();
+      },
+      brightness: { value: "" },
+      optime: {
+        value: "",
+        validate: function (v) {
+          return v.length === 0 || !isNaN(v);
         }
+      },
+      emitStop: { value: false },
+      event: { value: "" }
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: "font-awesome/fa-bolt",
+    label: function () {
+      if (this.name && this.name.indexOf("*") !== this.name.length - 1) {
+        return this.name;
+      }
 
-        $('#node-input-action').empty();
-        $('#node-input-position').empty();
+      let defaultName = "Shelly MQTT";
+      let configNode = RED.nodes.node(this.shellyDevice);
+      if (configNode) {
+        defaultName = configNode.name;
+      }
 
-        actions.forEach(o => {
-            let opt = $('<option>', { value: o, text: o, selected: ctx.action === o });
-            $('#node-input-action').append(opt);
-        });
+      let n = this.name || defaultName;
+      n = n.replace(/\*$/, "");
 
-        for (var i = 0; i < 101; i++) {
-            let opt = $('<option>', { value: i, text: `${i}%`, selected: +ctx.position === i });
-            $('#node-input-position').append(opt);
+      if (configNode.deviceType === "i3") {
+        n += ` | ${this.event} @ ${+configNode.channel + 1}`;
+      } else if (this.action.length > 0) {
+        n += ` | ${this.action}`;
+        if (this.brightness) {
+          n += ` (${this.brightness}%)`;
+        } else if (this.action === "position") {
+          n += ` (${this.position}%)`;
+        } else if (this.optime) {
+          n += ` (${this.optime}ms)`;
         }
+        if (["open", "close"].includes(this.action) && this.emitStop) {
+          n += ` ES`;
+        }
+      }
 
+      return n;
+    },
+    oneditprepare: function () {
+      init(this, this.shellyDevice);
+
+      $("#node-input-shellyDevice").change(() => {
+        init(this, $("#node-input-shellyDevice").val());
+      });
+
+      $("#node-input-action").change(function () {
         togglePositionVisibility();
         toggleOpTimeVisibility();
+        toggleBrightnessVisibility();
+      });
+    }
+  });
+
+  function init(ctx, shellyDevice) {
+    let actions = [];
+    let events = [];
+    let configNode = RED.nodes.node(shellyDevice);
+
+    $(".action").hide();
+    $(".event").hide();
+
+    if (configNode.channel === "cover") {
+      actions = ["", "open", "close", "stop", "position"];
+      events = ["", "any", "short", "long"];
+    } else if (["1pm", "2.5", "vintage"].includes(configNode.deviceType)) {
+      actions = ["", "on", "off"];
+      events = configNode.deviceType === "vintage" ? [] : ["", "any", "short press", "long press"];
+    } else if (configNode.deviceType === "i3") {
+      actions = [];
+      events = ["any", "short", "long", "double", "triple", "short long", "long short"];
     }
 
-    function togglePositionVisibility() {
-        if ($('#node-input-action').val() === 'position') {
-            $('.position').show();
-        } else {
-            $('.position').hide();
-        }
+    $("#node-input-action").empty();
+    $("#node-input-position").empty();
+    $("#node-input-brightness").empty();
+    $("#node-input-event").empty();
+
+    actions.forEach((o) => {
+      let opt = $("<option>", { value: o, text: o, selected: ctx.action === o });
+      $("#node-input-action").append(opt);
+    });
+
+    events.forEach((o) => {
+      let opt = $("<option>", { value: o, text: o, selected: ctx.event === o });
+      $("#node-input-event").append(opt);
+    });
+
+    for (var i = 0; i < 101; i++) {
+      let opt = $("<option>", { value: i, text: `${i}%`, selected: +ctx.position === i });
+      $("#node-input-position").append(opt);
+      $("#node-input-brightness").append(opt);
     }
 
-    function toggleOpTimeVisibility() {
-        let action = $('#node-input-action').val();
-        if (action === 'open' || action === 'close') {
-            $('.optime').show();
-            $('.emitStop').show();
-        } else {
-            $('.optime').hide();
-            $('.emitStop').hide();
-        }
+    if (actions.length > 0) {
+      $(".action").show();
+    } else {
+      $("#node-input-action").val(""); // Reset value TODO check! not working...
     }
+
+    if (events.length > 0) {
+      $(".event").show();
+    } else {
+      $("#node-input-event").val(""); // Reset value
+    }
+
+    togglePositionVisibility();
+    toggleOpTimeVisibility();
+    toggleBrightnessVisibility(configNode);
+  }
+
+  function isDimmable(configNode) {
+    return configNode && configNode.deviceType === "vintage";
+  }
+
+  function togglePositionVisibility() {
+    if ($("#node-input-action").val() === "position") {
+      $(".position").show();
+    } else {
+      $(".position").hide();
+    }
+  }
+
+  function toggleOpTimeVisibility() {
+    let action = $("#node-input-action").val();
+    if (action === "open" || action === "close") {
+      $(".optime").show();
+      $(".emitStop").show();
+    } else {
+      $(".optime").hide();
+      $(".emitStop").hide();
+    }
+  }
+
+  function toggleBrightnessVisibility(configNode) {
+    if ($("#node-input-action").val() === "on" && isDimmable(configNode)) {
+      $(".brightness").show();
+    } else {
+      $(".brightness").hide();
+    }
+  }
 </script>
 
-<script type="text/html" data-template-name="shelly mqtt device">
-    <div class="form-row">
-        <label for="node-input-shellyDevice"><i class="fa fa-cog"></i> Shelly device</label>
-        <input id="node-input-shellyDevice">
-    </div>
-    <div class="form-row">
-        <label for="node-input-name"><i class="fa fa-pencil"></i> Name</label>
-        <input type="text" id="node-input-name">
-    </div>
-    <div class="form-row action">
-        <label for="node-input-action"><i class="fa fa-pencil"></i> Action</label>
-        <select id="node-input-action"></select>
-    </div>
-    <div class="form-row position">
-        <label for="node-input-position"><i class="fa fa-pencil"></i> Position</label>
-        <select id="node-input-position"></select>
-    </div>
-    <div class="form-row optime">
-        <label for="node-input-optime"><i class="fa fa-pencil"></i> Op. time (ms)</label>
-        <input type="text" id="node-input-optime">
-    </div>
-    <div class="form-row emitStop">
-        <label for="node-input-emitStop"><i class="fa fa-pencil"></i> Emit stop</label>
-        <input type="checkbox" id="node-input-emitStop">
-    </div>
+<script type="text/html" data-template-name="shelly mqtt device" id="form">
+  <div class="form-row">
+    <label for="node-input-shellyDevice"><i class="fa fa-cog"></i> Shelly device</label>
+    <input id="node-input-shellyDevice" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-pencil"></i> Name</label>
+    <input type="text" id="node-input-name" />
+  </div>
+  <div class="form-row action">
+    <label for="node-input-action"><i class="fa fa-pencil"></i> Action</label>
+    <select id="node-input-action"></select>
+  </div>
+  <div class="form-row position">
+    <label for="node-input-position"><i class="fa fa-pencil"></i> Position</label>
+    <select id="node-input-position"></select>
+  </div>
+  <div class="form-row brightness">
+    <label for="node-input-brightness"><i class="fa fa-pencil"></i> Brightness</label>
+    <select id="node-input-brightness"></select>
+  </div>
+  <div class="form-row optime">
+    <label for="node-input-optime"><i class="fa fa-pencil"></i> Op. time (ms)</label>
+    <input type="text" id="node-input-optime" />
+  </div>
+  <div class="form-row emitStop">
+    <label for="node-input-emitStop"><i class="fa fa-pencil"></i> Emit stop</label>
+    <input type="checkbox" id="node-input-emitStop" />
+  </div>
+  <div class="form-row event">
+    <label for="node-input-event"><i class="fa fa-pencil"></i> Event</label>
+    <select id="node-input-event"></select>
+  </div>
 </script>
 
 <script type="text/html" data-help-name="shelly mqtt device">
-    <p>Shelly MQTT protocol helper for Node-Red.</p>
+  <p>Shelly MQTT protocol helper for Node-Red.</p>
 </script>
