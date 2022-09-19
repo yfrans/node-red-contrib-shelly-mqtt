@@ -9,12 +9,25 @@ module.exports = function (RED) {
 
     const emitStop = config.action !== "stop" && config.emitStop;
 
-    // Send message from node
-    this.sendNodeMessage = (payload) => {
-      this.send({
-        device: this.shellyDevice.config.deviceName,
-        payload
-      });
+    // Send status message from node
+    this.sendStatusMessage = (status) => {
+      this.send([
+        {
+          device: this.shellyDevice.config.deviceName,
+          status
+        },
+        null
+      ]);
+    };
+
+    this.sendEventMessage = (event) => {
+      this.send([
+        null,
+        {
+          device: this.shellyDevice.config.deviceName,
+          ...event
+        }
+      ]);
     };
 
     // Subscribe to all relevant device events
@@ -58,11 +71,11 @@ module.exports = function (RED) {
         if (action === "stop" && !device.stopEmitted) {
           device.stopEmitted = true;
           setTimeout(() => {
-            device.sendNodeMessage(null);
+            device.sendStatusMessage(null);
           }, 500);
         }
       } else {
-        device.sendNodeMessage({ action });
+        device.sendStatusMessage({ action });
       }
       device.lastState.rollerAction = action;
       updateNodeStatus(device, device.lastState);
@@ -78,23 +91,23 @@ module.exports = function (RED) {
       if (!status) {
         return;
       }
-      device.sendNodeMessage({ light: status.ison, brightness: status.brightness });
+      device.sendStatusMessage({ light: status.ison, brightness: status.brightness });
       device.lastState.light = status.ison;
       device.lastState.brightness = status.brightness;
       updateNodeStatus(device, device.lastState);
     });
     device.shellyDevice.eventEmitter.on("roller-position", (position) => {
-      device.sendNodeMessage({ position: +position });
+      device.sendStatusMessage({ position: +position });
       device.lastState.position = position;
       updateNodeStatus(device, device.lastState);
     });
     device.shellyDevice.eventEmitter.on("relay-state", (state) => {
-      device.sendNodeMessage({ state });
+      device.sendStatusMessage({ state });
       device.lastState.channel = state;
       updateNodeStatus(device, device.lastState);
     });
     device.shellyDevice.eventEmitter.on("relay-power", (power) => {
-      device.sendNodeMessage({ power: +power });
+      device.sendStatusMessage({ power: +power });
       device.lastState.power = power;
       updateNodeStatus(device, device.lastState);
     });
@@ -126,7 +139,7 @@ module.exports = function (RED) {
         (config.event === "short long" && message.event === "SL") ||
         (config.event === "long short" && message.event === "LS")
       ) {
-        device.sendNodeMessage({
+        device.sendEventMessage({
           event: message.event,
           count: message.event_cnt
         });

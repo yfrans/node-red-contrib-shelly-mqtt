@@ -22,7 +22,8 @@
       event: { value: "" }
     },
     inputs: 1,
-    outputs: 1,
+    outputs: 2,
+    outputLabels: ["Status", "Event"],
     icon: "font-awesome/fa-bolt",
     label: function () {
       if (this.name && this.name.indexOf("*") !== this.name.length - 1) {
@@ -92,7 +93,7 @@
       events = ["", "any", "short", "long"];
     } else if (["1pm", "2.5", "vintage"].includes(configNode.deviceType)) {
       actions = ["", "on", "off"];
-      events = configNode.deviceType === "vintage" ? [] : ["", "any", "short press", "long press"];
+      events = configNode.deviceType === "vintage" ? [] : ["", "any", "short", "long"];
     } else if (configNode.deviceType === "i3") {
       actions = [];
       events = ["any", "short", "long", "double", "triple", "short long", "long short"];
