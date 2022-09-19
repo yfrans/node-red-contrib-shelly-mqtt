@@ -1,0 +1,95 @@
+[
+    {
+        "id": "d2ad4b6aa90bdde6",
+        "type": "shelly mqtt device",
+        "z": "8e33ae33.8d86a",
+        "name": "",
+        "shellyDevice": "69441767ab4308ae",
+        "action": "open",
+        "position": "",
+        "brightness": "100",
+        "optime": "",
+        "emitStop": false,
+        "event": "",
+        "x": 360,
+        "y": 180,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "dc91e84db4da84e9",
+        "type": "inject",
+        "z": "8e33ae33.8d86a",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 120,
+        "y": 180,
+        "wires": [
+            [
+                "d2ad4b6aa90bdde6"
+            ]
+        ]
+    },
+    {
+        "id": "a34b99f68ea56cb1",
+        "type": "comment",
+        "z": "8e33ae33.8d86a",
+        "name": "Open Cover",
+        "info": "",
+        "x": 110,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "69441767ab4308ae",
+        "type": "shelly-mqtt-config",
+        "name": "Shelly 2.5 #2 (Cover)",
+        "mqttBroker": "7b7f926b.c5ec9c",
+        "deviceName": "shelly-fghi",
+        "deviceType": "2.5",
+        "channel": "cover",
+        "haDiscovery": false
+    },
+    {
+        "id": "7b7f926b.c5ec9c",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "localhost",
+        "port": "1888",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "sessionExpiry": ""
+    }
+]

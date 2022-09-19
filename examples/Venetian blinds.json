@@ -1,0 +1,86 @@
+[
+    {
+        "id": "6c2522fbf83ed69d",
+        "type": "shelly mqtt device",
+        "z": "8e33ae33.8d86a",
+        "name": "",
+        "shellyDevice": "69441767ab4308ae",
+        "action": "close",
+        "position": "50",
+        "brightness": "0",
+        "optime": "",
+        "emitStop": true,
+        "event": "",
+        "x": 750,
+        "y": 220,
+        "wires": [
+            [
+                "a2b12b2c27ea66af"
+            ]
+        ]
+    },
+    {
+        "id": "82b18be3ae608328",
+        "type": "comment",
+        "z": "8e33ae33.8d86a",
+        "name": "Venetian blinds",
+        "info": "From open state to closed state,\nwith blinds at specific angle.\nUse the \"ms\" propery to decide for how much\ntime to activate the motor.",
+        "x": 700,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "a2b12b2c27ea66af",
+        "type": "shelly mqtt device",
+        "z": "8e33ae33.8d86a",
+        "name": "",
+        "shellyDevice": "69441767ab4308ae",
+        "action": "open",
+        "position": "50",
+        "brightness": "0",
+        "optime": "250",
+        "emitStop": false,
+        "event": "",
+        "x": 830,
+        "y": 280,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "69441767ab4308ae",
+        "type": "shelly-mqtt-config",
+        "name": "Shelly 2.5 #2 (Cover)",
+        "mqttBroker": "7b7f926b.c5ec9c",
+        "deviceName": "shelly-fghi",
+        "deviceType": "2.5",
+        "channel": "cover",
+        "haDiscovery": false
+    },
+    {
+        "id": "7b7f926b.c5ec9c",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "localhost",
+        "port": "1888",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "sessionExpiry": ""
+    }
+]

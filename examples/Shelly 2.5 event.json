@@ -1,0 +1,84 @@
+[
+    {
+        "id": "a424cb41cb9b5a32",
+        "type": "shelly mqtt device",
+        "z": "8e33ae33.8d86a",
+        "name": "",
+        "shellyDevice": "2065b2b0cc051a09",
+        "action": "",
+        "position": "0",
+        "brightness": "0",
+        "optime": "",
+        "emitStop": false,
+        "event": "long press",
+        "x": 170,
+        "y": 480,
+        "wires": [
+            [
+                "dfd3e36411a7b018"
+            ]
+        ]
+    },
+    {
+        "id": "ae354a3486424c2d",
+        "type": "comment",
+        "z": "8e33ae33.8d86a",
+        "name": "Shelly 2.5 event",
+        "info": "",
+        "x": 120,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "dfd3e36411a7b018",
+        "type": "debug",
+        "z": "8e33ae33.8d86a",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 400,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "2065b2b0cc051a09",
+        "type": "shelly-mqtt-config",
+        "name": "Shelly 2.5 #1 (Light)",
+        "mqttBroker": "7b7f926b.c5ec9c",
+        "deviceName": "shelly-abcd",
+        "deviceType": "2.5",
+        "channel": "0",
+        "haDiscovery": false
+    },
+    {
+        "id": "7b7f926b.c5ec9c",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "localhost",
+        "port": "1888",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "sessionExpiry": ""
+    }
+]

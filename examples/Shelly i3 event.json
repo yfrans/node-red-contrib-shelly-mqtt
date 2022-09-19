@@ -1,0 +1,84 @@
+[
+    {
+        "id": "c35877eff2233a1c",
+        "type": "shelly mqtt device",
+        "z": "8e33ae33.8d86a",
+        "name": "",
+        "shellyDevice": "e429f4661a59de04",
+        "action": "",
+        "position": "0",
+        "brightness": "0",
+        "optime": "",
+        "emitStop": false,
+        "event": "short long",
+        "x": 130,
+        "y": 600,
+        "wires": [
+            [
+                "f17c98f80e8e21d0"
+            ]
+        ]
+    },
+    {
+        "id": "0f8508d411e7644f",
+        "type": "comment",
+        "z": "8e33ae33.8d86a",
+        "name": "i3 event",
+        "info": "",
+        "x": 90,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "f17c98f80e8e21d0",
+        "type": "debug",
+        "z": "8e33ae33.8d86a",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 320,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "e429f4661a59de04",
+        "type": "shelly-mqtt-config",
+        "name": "i3",
+        "mqttBroker": "7b7f926b.c5ec9c",
+        "deviceName": "i3-abcd",
+        "deviceType": "i3",
+        "channel": "0",
+        "haDiscovery": false
+    },
+    {
+        "id": "7b7f926b.c5ec9c",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "localhost",
+        "port": "1888",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "sessionExpiry": ""
+    }
+]
