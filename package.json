@@ -3,6 +3,10 @@
     "version": "1.1.1",
     "description": "Shelly MQTT protocol helper for Node-Red.",
     "node-red": {
+        "version": ">=1.0.0",
+        "engines": {
+            "node": ">=12.0.0"
+        },
         "nodes": {
             "shelly-mqtt-device": "shelly-mqtt-device.js",
             "shelly-mqtt-action": "shelly-mqtt-action.js",
