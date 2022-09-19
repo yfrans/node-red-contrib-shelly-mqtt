@@ -123,12 +123,12 @@ module.exports = function (RED) {
         eventCount = 0;
       }
 
-      if (this.eventCount === eventCount) {
+      if (device.eventCount === eventCount) {
         // Old event, skip
         return;
       }
 
-      this.eventCount = eventCount;
+      device.eventCount = eventCount;
 
       if (
         config.event === "any" ||
