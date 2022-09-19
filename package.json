@@ -9,7 +9,6 @@
         },
         "nodes": {
             "shelly-mqtt-device": "shelly-mqtt-device.js",
-            "shelly-mqtt-action": "shelly-mqtt-action.js",
             "shelly-mqtt-config": "shelly-mqtt-config.js"
         }
     },
