@@ -37,7 +37,9 @@ module.exports = {
       state_stopped: "stop"
     });
     config.unique_id += "-cover";
-    node.mqttConf.client.publish(`${DISCOVERY_PREFIX}/cover/${config.unique_id}/config`, JSON.stringify(config));
+    node.mqttConf.client.publish(`${DISCOVERY_PREFIX}/cover/${config.unique_id}/config`, JSON.stringify(config), {
+      retain: true
+    });
 
     config = getConfigObject(node, {
       state_topic: "~/roller/0/power",
@@ -47,7 +49,9 @@ module.exports = {
     });
     config.unique_id += "-cover-power";
     config.name += " power";
-    node.mqttConf.client.publish(`${DISCOVERY_PREFIX}/sensor/${config.unique_id}/config`, JSON.stringify(config));
+    node.mqttConf.client.publish(`${DISCOVERY_PREFIX}/sensor/${config.unique_id}/config`, JSON.stringify(config), {
+      retain: true
+    });
 
     config = getConfigObject(node, {
       state_topic: "~/roller/0/energy",
@@ -58,7 +62,9 @@ module.exports = {
     });
     config.name += " energy";
     config.unique_id += `-cover-energy`;
-    node.mqttConf.client.publish(`${DISCOVERY_PREFIX}/sensor/${config.unique_id}/config`, JSON.stringify(config));
+    node.mqttConf.client.publish(`${DISCOVERY_PREFIX}/sensor/${config.unique_id}/config`, JSON.stringify(config), {
+      retain: true
+    });
   },
   relay: function (node) {
     let config = getConfigObject(node, {
@@ -68,7 +74,9 @@ module.exports = {
       payload_on: "on"
     });
     config.unique_id += `-relay${node.config.channel}`;
-    node.mqttConf.client.publish(`${DISCOVERY_PREFIX}/light/${config.unique_id}/config`, JSON.stringify(config));
+    node.mqttConf.client.publish(`${DISCOVERY_PREFIX}/light/${config.unique_id}/config`, JSON.stringify(config), {
+      retain: true
+    });
 
     config = getConfigObject(node, {
       state_topic: `~/relay/${node.config.channel}/power`,
@@ -78,7 +86,9 @@ module.exports = {
     });
     config.unique_id += `-relay${node.config.channel}-power`;
     config.name += " power";
-    node.mqttConf.client.publish(`${DISCOVERY_PREFIX}/sensor/${config.unique_id}/config`, JSON.stringify(config));
+    node.mqttConf.client.publish(`${DISCOVERY_PREFIX}/sensor/${config.unique_id}/config`, JSON.stringify(config), {
+      retain: true
+    });
 
     config = getConfigObject(node, {
       state_topic: `~/relay/${node.config.channel}/energy`,
@@ -89,7 +99,9 @@ module.exports = {
     });
     config.name += " energy";
     config.unique_id += `-relay${node.config.channel}-energy`;
-    node.mqttConf.client.publish(`${DISCOVERY_PREFIX}/sensor/${config.unique_id}/config`, JSON.stringify(config));
+    node.mqttConf.client.publish(`${DISCOVERY_PREFIX}/sensor/${config.unique_id}/config`, JSON.stringify(config), {
+      retain: true
+    });
   },
   vintage: function (node) {
     let config = getConfigObject(node, {
@@ -104,7 +116,9 @@ module.exports = {
     });
     config.unique_id += `-light`;
 
-    node.mqttConf.client.publish(`${DISCOVERY_PREFIX}/light/${config.unique_id}/config`, JSON.stringify(config));
+    node.mqttConf.client.publish(`${DISCOVERY_PREFIX}/light/${config.unique_id}/config`, JSON.stringify(config), {
+      retain: true
+    });
 
     config = getConfigObject(node, {
       state_topic: `~/light/0/power`,
@@ -114,7 +128,9 @@ module.exports = {
     });
     config.unique_id += `-light-power`;
     config.name += " power";
-    node.mqttConf.client.publish(`${DISCOVERY_PREFIX}/sensor/${config.unique_id}/config`, JSON.stringify(config));
+    node.mqttConf.client.publish(`${DISCOVERY_PREFIX}/sensor/${config.unique_id}/config`, JSON.stringify(config), {
+      retain: true
+    });
 
     config = getConfigObject(node, {
       state_topic: `~/light/0/energy`,
@@ -125,6 +141,8 @@ module.exports = {
     });
     config.name += " energy";
     config.unique_id += `-light-energy`;
-    node.mqttConf.client.publish(`${DISCOVERY_PREFIX}/sensor/${config.unique_id}/config`, JSON.stringify(config));
+    node.mqttConf.client.publish(`${DISCOVERY_PREFIX}/sensor/${config.unique_id}/config`, JSON.stringify(config), {
+      retain: true
+    });
   }
 };
