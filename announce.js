@@ -8,7 +8,7 @@ function getConfigObject(node, add = {}) {
       payload_available: "true",
       payload_not_available: "false",
       name: node.config.name,
-      unique_id: node.config.name.replace(/\s/gi, "_").toLowerCase(),
+      unique_id: node.config.name.replace(/\s|\'|\"/gi, "_").toLowerCase(),
       device: {
         identifiers: [node.config.deviceName],
         name: node.config.deviceName,
