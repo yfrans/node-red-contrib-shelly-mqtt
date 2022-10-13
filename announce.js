@@ -103,7 +103,7 @@ module.exports = {
       retain: true
     });
   },
-  vintage: function (node) {
+  dimmer_vintage: function (node) {
     let config = getConfigObject(node, {
       command_topic: `~/light/0/set`,
       state_topic: `~/light/0/status`,

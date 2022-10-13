@@ -91,7 +91,7 @@
     if (configNode.channel === "cover") {
       actions = ["", "open", "close", "stop", "position"];
       events = ["", "any", "short", "long"];
-    } else if (["1pm", "2.5", "vintage"].includes(configNode.deviceType)) {
+    } else if (["1pm", "2.5", "vintage", "dimmer"].includes(configNode.deviceType)) {
       actions = ["", "on", "off"];
       events = configNode.deviceType === "vintage" ? [] : ["", "any", "short", "long"];
     } else if (configNode.deviceType === "i3") {
@@ -139,7 +139,7 @@
   }
 
   function isDimmable(configNode) {
-    return configNode && configNode.deviceType === "vintage";
+    return configNode && ["vintage", "dimmer"].includes(configNode.deviceType);
   }
 
   function togglePositionVisibility() {

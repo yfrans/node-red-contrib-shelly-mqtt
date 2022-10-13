@@ -33,6 +33,7 @@
     switch (selectedDeviceType) {
       case "1pm":
       case "vintage":
+      case "dimmer":
         channelCount = 1;
         break;
       case "2.5":
@@ -87,6 +88,7 @@
     <select id="node-config-input-deviceType">
       <option value="2.5">Shelly 2.5</option>
       <option value="1pm">Shelly 1 / 1PM</option>
+      <option value="dimmer">Dimmer</option>
       <option value="vintage">Vintage</option>
       <option value="i3">i3</option>
     </select>

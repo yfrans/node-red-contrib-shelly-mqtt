@@ -111,7 +111,7 @@ module.exports = function (RED) {
         }, message.optime);
       }
     } else {
-      if (device.config.deviceType === "vintage") {
+      if (device.config.deviceType === "vintage" || device.config.deviceType === "dimmer") {
         device.mqttConf.client.publish(
           `shellies/${device.config.deviceName}/light/0/set`,
           JSON.stringify({
@@ -139,8 +139,8 @@ module.exports = function (RED) {
       }
     } else if (node.config.deviceType === "1pm") {
       announce.relay(node);
-    } else if (node.config.deviceType === "vintage") {
-      announce.vintage(node);
+    } else if (node.config.deviceType === "vintage" || node.config.deviceType === "dimmer") {
+      announce.dimmer_vintage(node);
     }
   }
 
@@ -172,7 +172,7 @@ module.exports = function (RED) {
         node.subscribe(`relay/${node.config.channel}/power`, () => "relay-power");
         node.subscribe(`relay/${node.config.channel}/energy`, () => "relay-energy");
       }
-    } else if (node.config.deviceType === "vintage") {
+    } else if (node.config.deviceType === "vintage" || node.config.deviceType === "dimmer") {
       node.subscribe(`light/0/status`, () => "light-status");
       node.subscribe(`light/0/power`, () => "light-power");
     } else if (node.config.deviceType === "i3") {
