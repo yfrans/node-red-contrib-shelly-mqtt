@@ -45,7 +45,20 @@ module.exports = function (RED) {
         if (config.action === "position") {
           msg.position = config.position;
         } else {
-          msg.action = config.action;
+          if (config.action === "toggle") {
+            let newState = null;
+            if (this.lastState.channel) {
+              newState = this.lastState.channel === "on" ? "off" : "on";
+            } else if ("light" in this.lastState) {
+              newState = this.lastState.light ? "off" : "on";
+            }
+            if (!newState) {
+              return;
+            }
+            msg.action = newState;
+          } else {
+            msg.action = config.action;
+          }
           msg.optime = config.optime;
           msg.brightness = config.brightness;
         }

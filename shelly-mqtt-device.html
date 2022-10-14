@@ -92,7 +92,7 @@
       actions = ["", "open", "close", "stop", "position"];
       events = ["", "any", "short", "long"];
     } else if (["1pm", "2.5", "vintage", "dimmer"].includes(configNode.deviceType)) {
-      actions = ["", "on", "off"];
+      actions = ["", "on", "off", "toggle"];
       events = configNode.deviceType === "vintage" ? [] : ["", "any", "short", "long"];
     } else if (configNode.deviceType === "i3") {
       actions = [];
