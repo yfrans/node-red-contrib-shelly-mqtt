@@ -162,7 +162,7 @@
   }
 
   function toggleBrightnessVisibility(configNode) {
-    if ($("#node-input-action").val() === "on" && isDimmable(configNode)) {
+    if (["on", "toggle"].includes($("#node-input-action").val()) && isDimmable(configNode)) {
       $(".brightness").show();
     } else {
       $(".brightness").hide();
